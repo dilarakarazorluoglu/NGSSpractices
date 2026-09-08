@@ -61,6 +61,7 @@
     display:grid;grid-template-columns:1fr;gap:11px;
     max-height:calc(100vh - 210px);overflow:auto;padding-right:4px;
   }
+  #cardBank.dragover{outline:3px dashed var(--blue-dark);outline-offset:6px;border-radius:12px;background:#eef9ff;}
   .example-card{
     background:var(--yellow);
     border:2px solid transparent;
@@ -75,8 +76,6 @@
   .example-card strong{display:inline-block;margin-right:4px}
   .example-card:hover{border-color:var(--yellow-dark)}
   .example-card.selected{outline:4px solid rgba(25,141,200,.28);border-color:var(--blue-dark)}
-  .example-card.correct{border-color:var(--green);box-shadow:0 0 0 4px rgba(47,168,111,.14)}
-  .example-card.incorrect{border-color:var(--red);box-shadow:0 0 0 4px rgba(214,75,75,.12)}
   .practice-grid{
     display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;
   }
@@ -93,14 +92,9 @@
     padding:10px;min-height:112px;display:grid;gap:9px;align-content:start;
   }
   .slot:empty::before{
-    content:"Drop 2 classroom examples here";
+    content:"Drop classroom examples here";
     color:#8aa0b5;font-size:14px;font-weight:700;text-align:center;margin-top:28px;
   }
-  .answer-note{
-    display:none;margin-top:10px;padding:10px 12px;background:#eef8f2;border-radius:10px;
-    font-size:13px;line-height:1.35
-  }
-  .answer-note.show{display:block}
   .legend{font-size:13px;color:var(--muted);margin-top:12px}
   .mobile-hint{display:none}
   @media(max-width:980px){
@@ -124,14 +118,10 @@
 <header>
   <h1>NGSS Science & Engineering Practices Jigsaw</h1>
   <p class="subtitle">
-    Work with your group to match each classroom example to the Science and Engineering Practice it best represents.
-    Each practice has <strong>two</strong> matching examples.
+    Work with your group to place each classroom example under the Science and Engineering Practice it best represents.
   </p>
   <div class="toolbar">
-    <button id="shuffleBtn">Shuffle Cards</button>
-    <button id="checkBtn">Check Groups</button>
-    <button id="resetBtn" class="secondary">Reset</button>
-    <button id="answersBtn" class="secondary">Teacher Answer Key</button>
+    <button id="resetBtn">Reset Activity</button>
     <span id="status">0 / 16 placed</span>
   </div>
   <p class="mobile-hint">On touch devices: tap a card, then tap the practice where you want to place it.</p>
@@ -152,14 +142,14 @@
 
 <script>
 const practices = [
-  {id:"ask", title:"Asking Questions and Defining Problems", answers:[5,12]},
-  {id:"models", title:"Developing and Using Models", answers:[7,15]},
-  {id:"data", title:"Analyzing and Interpreting Data", answers:[6,16]},
-  {id:"investigate", title:"Planning and Carrying Out Investigations", answers:[2,10]},
-  {id:"math", title:"Using Mathematics and Computational Thinking", answers:[4,9]},
-  {id:"explain", title:"Constructing Explanations and Designing Solutions", answers:[1,8]},
-  {id:"argument", title:"Engaging in Argument from Evidence", answers:[3,13]},
-  {id:"info", title:"Obtaining, Evaluating, and Communicating Information", answers:[11,14]}
+  {id:"ask", title:"Asking Questions and Defining Problems"},
+  {id:"models", title:"Developing and Using Models"},
+  {id:"data", title:"Analyzing and Interpreting Data"},
+  {id:"investigate", title:"Planning and Carrying Out Investigations"},
+  {id:"math", title:"Using Mathematics and Computational Thinking"},
+  {id:"explain", title:"Constructing Explanations and Designing Solutions"},
+  {id:"argument", title:"Engaging in Argument from Evidence"},
+  {id:"info", title:"Obtaining, Evaluating, and Communicating Information"}
 ];
 
 const examples = [
@@ -212,8 +202,7 @@ function build(){
     const zone=document.createElement("div");
     zone.className="dropzone";
     zone.dataset.practice=p.id;
-    zone.innerHTML=`<div class="practice-title">${p.title}</div><div class="slot"></div>
-      <div class="answer-note"><strong>Answer key:</strong> Examples ${p.answers.join(" and ")}</div>`;
+    zone.innerHTML=`<div class="practice-title">${p.title}</div><div class="slot"></div>`;
     zone.addEventListener("dragover",e=>{e.preventDefault();zone.classList.add("dragover")});
     zone.addEventListener("dragleave",()=>zone.classList.remove("dragover"));
     zone.addEventListener("drop",e=>{
@@ -235,18 +224,16 @@ function build(){
   });
 }
 
-function fillBank(shuffle=true){
+function fillBank(){
   const bank=document.getElementById("cardBank");
   bank.innerHTML="";
-  let arr=[...examples];
-  if(shuffle) arr.sort(()=>Math.random()-.5);
-  arr.forEach(ex=>bank.appendChild(makeCard(ex)));
+  [...examples]
+    .sort((a,b)=>a.n-b.n)
+    .forEach(ex=>bank.appendChild(makeCard(ex)));
   updateStatus();
 }
 
-function clearFeedback(){
-  document.querySelectorAll(".example-card").forEach(c=>c.classList.remove("correct","incorrect"));
-}
+function clearFeedback(){}
 
 function updateStatus(){
   let placed=0;
@@ -254,36 +241,83 @@ function updateStatus(){
   document.getElementById("status").textContent=`${placed} / 16 placed`;
 }
 
-function checkAnswers(){
-  clearFeedback();
-  let correct=0, placed=0;
-  practices.forEach(p=>{
-    const zone=document.querySelector(`.dropzone[data-practice="${p.id}"]`);
-    zone.querySelectorAll(".example-card").forEach(card=>{
-      placed++;
-      const n=Number(card.dataset.num);
-      if(p.answers.includes(n)){card.classList.add("correct"); correct++;}
-      else card.classList.add("incorrect");
-    });
+
+
+function enableBankDrop(){
+  const bank = document.getElementById("cardBank");
+
+  bank.addEventListener("dragover", e => {
+    e.preventDefault();
+    bank.classList.add("dragover");
   });
-  document.getElementById("status").textContent=`${correct} correct · ${placed}/16 placed`;
+
+  bank.addEventListener("dragleave", e => {
+    if (!bank.contains(e.relatedTarget)) {
+      bank.classList.remove("dragover");
+    }
+  });
+
+  bank.addEventListener("drop", e => {
+    e.preventDefault();
+    bank.classList.remove("dragover");
+
+    const n = e.dataTransfer.getData("text/plain");
+    const card = document.querySelector(`.example-card[data-num="${n}"]`);
+    if (card) {
+      bank.appendChild(card);
+
+      // Keep classroom examples in numerical order after returning a card.
+      [...bank.querySelectorAll(".example-card")]
+        .sort((a,b) => Number(a.dataset.num) - Number(b.dataset.num))
+        .forEach(c => bank.appendChild(c));
+
+      selectedCard = null;
+      document.querySelectorAll(".example-card").forEach(c => c.classList.remove("selected"));
+      updateStatus();
+    }
+  });
+
+  // Tap/click support: if a card is selected inside a practice group,
+  // clicking the Classroom Examples panel returns it to the bank.
+  bank.addEventListener("click", e => {
+    if (selectedCard && !e.target.closest(".example-card")) {
+      bank.appendChild(selectedCard);
+
+      [...bank.querySelectorAll(".example-card")]
+        .sort((a,b) => Number(a.dataset.num) - Number(b.dataset.num))
+        .forEach(c => bank.appendChild(c));
+
+      selectedCard.classList.remove("selected");
+      selectedCard = null;
+      updateStatus();
+    }
+  });
 }
 
-function resetAll(shuffle=true){
-  clearFeedback();
-  selectedCard=null;
-  fillBank(shuffle);
+function resetAll(){
+  selectedCard = null;
+
+  // Completely clear every practice group.
+  document.querySelectorAll(".dropzone .slot").forEach(slot => {
+    slot.innerHTML = "";
+  });
+
+  // Restore all classroom examples to the left-hand Classroom Examples panel
+  // in their original numerical order.
+  const bank = document.getElementById("cardBank");
+  bank.innerHTML = "";
+  [...examples]
+    .sort((a,b) => a.n - b.n)
+    .forEach(ex => bank.appendChild(makeCard(ex)));
+
+  updateStatus();
 }
 
-document.getElementById("shuffleBtn").addEventListener("click",()=>resetAll(true));
-document.getElementById("checkBtn").addEventListener("click",checkAnswers);
-document.getElementById("resetBtn").addEventListener("click",()=>resetAll(false));
-document.getElementById("answersBtn").addEventListener("click",()=>{
-  document.querySelectorAll(".answer-note").forEach(n=>n.classList.toggle("show"));
-});
+document.getElementById("resetBtn").addEventListener("click",resetAll);
 
 build();
-fillBank(true);
+fillBank();
+enableBankDrop();
 </script>
 </body>
 </html>
