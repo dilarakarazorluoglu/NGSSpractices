@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NGSS Science & Engineering Practices Jigsaw</title>
+<style>
+  :root{
+    --bg:#f7fafc;
+    --ink:#132238;
+    --muted:#5d6b7d;
+    --blue:#38aef0;
+    --blue-dark:#198dc8;
+    --yellow:#ffdf63;
+    --yellow-dark:#e8c443;
+    --green:#2fa86f;
+    --red:#d64b4b;
+    --white:#fff;
+    --shadow:0 8px 24px rgba(25,50,80,.10);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background:
+      radial-gradient(circle at 8px 8px,#e8eef4 2px,transparent 2.2px) 0 0/20px 20px,
+      var(--bg);
+    color:var(--ink);
+  }
+  header{
+    max-width:1500px;
+    margin:0 auto;
+    padding:28px 28px 12px;
+  }
+  h1{margin:0 0 8px;font-size:clamp(26px,3vw,42px);line-height:1.1}
+  .subtitle{margin:0;color:var(--muted);font-size:17px;max-width:980px}
+  .toolbar{
+    display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+    margin-top:18px;
+  }
+  button{
+    border:0;border-radius:12px;padding:11px 15px;font-weight:700;
+    cursor:pointer;background:#173a5e;color:white;box-shadow:var(--shadow);
+  }
+  button.secondary{background:white;color:#173a5e;border:1px solid #d9e2eb}
+  button:hover{transform:translateY(-1px)}
+  #status{
+    margin-left:auto;font-weight:800;background:white;border:1px solid #d9e2eb;
+    padding:10px 14px;border-radius:12px;
+  }
+  main{
+    max-width:1500px;margin:0 auto;padding:18px 28px 40px;
+    display:grid;grid-template-columns:minmax(320px,.85fr) minmax(520px,1.6fr);gap:22px;
+  }
+  .panel{
+    background:rgba(255,255,255,.9);border:1px solid #e1e8ef;border-radius:18px;
+    box-shadow:var(--shadow);padding:16px;
+  }
+  .panel h2{margin:2px 0 14px;font-size:20px}
+  #cardBank{
+    display:grid;grid-template-columns:1fr;gap:11px;
+    max-height:calc(100vh - 210px);overflow:auto;padding-right:4px;
+  }
+  .example-card{
+    background:var(--yellow);
+    border:2px solid transparent;
+    border-radius:14px;
+    padding:13px 14px;
+    line-height:1.35;
+    font-weight:650;
+    box-shadow:0 5px 13px rgba(92,75,18,.12);
+    cursor:grab;
+    user-select:none;
+  }
+  .example-card strong{display:inline-block;margin-right:4px}
+  .example-card:hover{border-color:var(--yellow-dark)}
+  .example-card.selected{outline:4px solid rgba(25,141,200,.28);border-color:var(--blue-dark)}
+  .example-card.correct{border-color:var(--green);box-shadow:0 0 0 4px rgba(47,168,111,.14)}
+  .example-card.incorrect{border-color:var(--red);box-shadow:0 0 0 4px rgba(214,75,75,.12)}
+  .practice-grid{
+    display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;
+  }
+  .dropzone{
+    min-height:165px;border:2px dashed #b7d8ea;border-radius:16px;
+    background:#f7fcff;overflow:hidden;
+  }
+  .dropzone.dragover{background:#e8f7ff;border-color:var(--blue-dark)}
+  .practice-title{
+    background:var(--blue);padding:13px 14px;font-weight:850;font-size:17px;
+    text-align:center;border-bottom:1px solid rgba(0,0,0,.05)
+  }
+  .slot{
+    padding:10px;min-height:112px;display:grid;gap:9px;align-content:start;
+  }
+  .slot:empty::before{
+    content:"Drop 2 classroom examples here";
+    color:#8aa0b5;font-size:14px;font-weight:700;text-align:center;margin-top:28px;
+  }
+  .answer-note{
+    display:none;margin-top:10px;padding:10px 12px;background:#eef8f2;border-radius:10px;
+    font-size:13px;line-height:1.35
+  }
+  .answer-note.show{display:block}
+  .legend{font-size:13px;color:var(--muted);margin-top:12px}
+  .mobile-hint{display:none}
+  @media(max-width:980px){
+    main{grid-template-columns:1fr}
+    #cardBank{max-height:none}
+    .practice-grid{grid-template-columns:1fr}
+    #status{margin-left:0}
+    .mobile-hint{display:block;color:var(--muted);font-size:13px}
+  }
+  @media print{
+    body{background:white}
+    header,.panel{box-shadow:none}
+    .toolbar{display:none}
+    main{display:block}
+    #cardBank{max-height:none;grid-template-columns:1fr 1fr}
+    .practice-grid{margin-top:22px}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>NGSS Science & Engineering Practices Jigsaw</h1>
+  <p class="subtitle">
+    Work with your group to match each classroom example to the Science and Engineering Practice it best represents.
+    Each practice has <strong>two</strong> matching examples.
+  </p>
+  <div class="toolbar">
+    <button id="shuffleBtn">Shuffle Cards</button>
+    <button id="checkBtn">Check Groups</button>
+    <button id="resetBtn" class="secondary">Reset</button>
+    <button id="answersBtn" class="secondary">Teacher Answer Key</button>
+    <span id="status">0 / 16 placed</span>
+  </div>
+  <p class="mobile-hint">On touch devices: tap a card, then tap the practice where you want to place it.</p>
+</header>
+
+<main>
+  <section class="panel">
+    <h2>Classroom Examples</h2>
+    <div id="cardBank"></div>
+    <p class="legend">Tip: You can drag cards between groups at any time.</p>
+  </section>
+
+  <section class="panel">
+    <h2>Science & Engineering Practices</h2>
+    <div class="practice-grid" id="practiceGrid"></div>
+  </section>
+</main>
+
+<script>
+const practices = [
+  {id:"ask", title:"Asking Questions and Defining Problems", answers:[5,12]},
+  {id:"models", title:"Developing and Using Models", answers:[7,15]},
+  {id:"data", title:"Analyzing and Interpreting Data", answers:[6,16]},
+  {id:"investigate", title:"Planning and Carrying Out Investigations", answers:[2,10]},
+  {id:"math", title:"Using Mathematics and Computational Thinking", answers:[4,9]},
+  {id:"explain", title:"Constructing Explanations and Designing Solutions", answers:[1,8]},
+  {id:"argument", title:"Engaging in Argument from Evidence", answers:[3,13]},
+  {id:"info", title:"Obtaining, Evaluating, and Communicating Information", answers:[11,14]}
+];
+
+const examples = [
+  {n:1, text:"Third grade students use data collected from a plant investigation to determine what a plant needs to survive."},
+  {n:2, text:"A first grade teacher pre-selects objects that are transparent and opaque. He invites children to sort the material based on how it acts when it is placed in the path of a flashlight."},
+  {n:3, text:"Fifth grade students engage in a debate around the importance of recycling using information collected for a research project on the topic."},
+  {n:4, text:"Fourth grade students measure the depth and width of a river on an “erosion table” after it is on for one, five, ten, and fifteen minutes."},
+  {n:5, text:"A teacher provides her students copies of Eruption, a book about volcanoes. She invites students to write their questions about volcanoes on post-it notes and stick them to the page that prompted their question."},
+  {n:6, text:"A kindergarten class collects weather data during morning routine from August until December. The teacher uses those observations to help children describe weather patterns across these months."},
+  {n:7, text:"A kindergarten teacher shares with her students a diagram of a flower and an actual flower. The class discusses the difference between an actual object and a representation of that object."},
+  {n:8, text:"Second grade students use what was learned from investigations about heating and cooling water to write a letter to a preschool student who thinks his ice cube is “ruined” because it melted."},
+  {n:9, text:"Fifth grade students collect data on the length and direction of their shadow at different times. Students create a graphical representation of the data."},
+  {n:10, text:"Students conduct an experiment to determine the impact of different surfaces (sand, paper, wax paper, and carpet) on the distance a car travels."},
+  {n:11, text:"Students use books to prepare for a science report on fresh water reservoirs."},
+  {n:12, text:"A teacher shows children a piece of bread (in a Ziploc bag) that had been placed in the cabinet for one week. The class brainstorms a list of “wonderings” on chart paper and decides which “wonderings” are testable."},
+  {n:13, text:"First grade students sort statements of opinion and statements made with evidence."},
+  {n:14, text:"Students present the results of their scientific investigations at a science fair."},
+  {n:15, text:"Students create a scientific drawing of a coniferous and deciduous tree, and then label the parts using scientific terms learned in the unit."},
+  {n:16, text:"A second grade teacher provides children with different materials to observe. The children document their observations on notecards, and the teacher helps them decide which are qualitative and quantitative."}
+];
+
+let selectedCard = null;
+
+function makeCard(ex){
+  const card = document.createElement("div");
+  card.className = "example-card";
+  card.draggable = true;
+  card.dataset.num = ex.n;
+  card.innerHTML = `<strong>${ex.n}.</strong>${ex.text}`;
+  card.addEventListener("dragstart", e=>{
+    e.dataTransfer.setData("text/plain", String(ex.n));
+    setTimeout(()=>card.style.opacity=".55",0);
+  });
+  card.addEventListener("dragend", ()=>{
+    card.style.opacity="1";
+    document.querySelectorAll(".dropzone").forEach(z=>z.classList.remove("dragover"));
+  });
+  card.addEventListener("click", ()=>{
+    document.querySelectorAll(".example-card").forEach(c=>c.classList.remove("selected"));
+    if(selectedCard===card){ selectedCard=null; return; }
+    selectedCard=card; card.classList.add("selected");
+  });
+  return card;
+}
+
+function build(){
+  const grid=document.getElementById("practiceGrid");
+  grid.innerHTML="";
+  practices.forEach(p=>{
+    const zone=document.createElement("div");
+    zone.className="dropzone";
+    zone.dataset.practice=p.id;
+    zone.innerHTML=`<div class="practice-title">${p.title}</div><div class="slot"></div>
+      <div class="answer-note"><strong>Answer key:</strong> Examples ${p.answers.join(" and ")}</div>`;
+    zone.addEventListener("dragover",e=>{e.preventDefault();zone.classList.add("dragover")});
+    zone.addEventListener("dragleave",()=>zone.classList.remove("dragover"));
+    zone.addEventListener("drop",e=>{
+      e.preventDefault(); zone.classList.remove("dragover");
+      const n=e.dataTransfer.getData("text/plain");
+      const card=document.querySelector(`.example-card[data-num="${n}"]`);
+      zone.querySelector(".slot").appendChild(card);
+      clearFeedback(); updateStatus();
+    });
+    zone.addEventListener("click",e=>{
+      if(selectedCard && !e.target.closest(".example-card")){
+        zone.querySelector(".slot").appendChild(selectedCard);
+        selectedCard.classList.remove("selected");
+        selectedCard=null;
+        clearFeedback(); updateStatus();
+      }
+    });
+    grid.appendChild(zone);
+  });
+}
+
+function fillBank(shuffle=true){
+  const bank=document.getElementById("cardBank");
+  bank.innerHTML="";
+  let arr=[...examples];
+  if(shuffle) arr.sort(()=>Math.random()-.5);
+  arr.forEach(ex=>bank.appendChild(makeCard(ex)));
+  updateStatus();
+}
+
+function clearFeedback(){
+  document.querySelectorAll(".example-card").forEach(c=>c.classList.remove("correct","incorrect"));
+}
+
+function updateStatus(){
+  let placed=0;
+  document.querySelectorAll(".dropzone .example-card").forEach(()=>placed++);
+  document.getElementById("status").textContent=`${placed} / 16 placed`;
+}
+
+function checkAnswers(){
+  clearFeedback();
+  let correct=0, placed=0;
+  practices.forEach(p=>{
+    const zone=document.querySelector(`.dropzone[data-practice="${p.id}"]`);
+    zone.querySelectorAll(".example-card").forEach(card=>{
+      placed++;
+      const n=Number(card.dataset.num);
+      if(p.answers.includes(n)){card.classList.add("correct"); correct++;}
+      else card.classList.add("incorrect");
+    });
+  });
+  document.getElementById("status").textContent=`${correct} correct · ${placed}/16 placed`;
+}
+
+function resetAll(shuffle=true){
+  clearFeedback();
+  selectedCard=null;
+  fillBank(shuffle);
+}
+
+document.getElementById("shuffleBtn").addEventListener("click",()=>resetAll(true));
+document.getElementById("checkBtn").addEventListener("click",checkAnswers);
+document.getElementById("resetBtn").addEventListener("click",()=>resetAll(false));
+document.getElementById("answersBtn").addEventListener("click",()=>{
+  document.querySelectorAll(".answer-note").forEach(n=>n.classList.toggle("show"));
+});
+
+build();
+fillBank(true);
+</script>
+</body>
+</html>
